@@ -23,4 +23,5 @@ Cleaned File
 <ul> Drop unfinished trials </ul>
 > [!WARNING]
 > If the spectrometer did not come to a stop on its own then the trial may be dropped
+
 <ul> Forward fill missing column headers</ul>
