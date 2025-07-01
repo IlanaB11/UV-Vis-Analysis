@@ -2,7 +2,7 @@
 Website Access: https://uv-vis-analysis-uuozfjbh5atnrzf6lzvzla.streamlit.app/ <br> 
 
 Upload raw data from UV Spectrometer as a .csv file <br>
-Clean data: Remove text description and any unfinished trials <br> 
+Clean data to remove text descriptions and any unfinished trials <br> 
 Plot absorbance vs. wavelength in static (matplotlib) or interactive (plotly) 
 
 ## File Controlls
