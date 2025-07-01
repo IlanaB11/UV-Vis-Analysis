@@ -22,6 +22,15 @@ Interactive: Toggle between static (matplotlib) and interactive (plotly) graph
 > If something with the graphs looks wrong please look at the cleaned and normalized files to make sure the data is being proccessed correctly
 
 ## Graph Visuals
+Select Trials: Select which columns of data to display on graph
+Include Legend: Toggle legend display
+Color Customization
+<ul> Default: Use default matplotlib color</ul>
+<ul> Colormap: Select a preexisting [matplotlib color map](https://matplotlib.org/stable/users/explain/colors/colormaps.html)</ul>
+<ul>Custom: Custome set colors </ul>
+
+> [!NOTE]
+> Which trials are selected does not change the normalization
 
 
 ## Download Files
