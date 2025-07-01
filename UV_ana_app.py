@@ -2,8 +2,10 @@ import streamlit as st
 import pandas as pd
 import numpy as np
 import matplotlib.pyplot as plt
+import plotly.graph_objects as go
 import os
 from sklearn.preprocessing import MinMaxScaler
+from matplotlib.colors import to_hex
 
 
 st.title("Spectra Cleaner & Visualizer")
@@ -58,7 +60,7 @@ if input_file:
     x = pd.to_numeric(df_normalized.iloc[:, 0])
     ys = df_normalized.iloc[:, skip_cols:]
 
-
+    interactive = st.toggle("Interactive Plot", value = False)
     #user graph customization
     selected_cols = [] #let user select columns to plot
     with st.expander("Select Trials", expanded = False):
@@ -85,7 +87,8 @@ if input_file:
             cmap = plt.get_cmap(cmap_name)
             n = len(selected_cols)
             for i, col in enumerate(selected_cols):
-                color_map[col] = cmap(i / max(n - 1, 1))  # Normalize for color spacing
+                rgba = cmap(i / max(n - 1, 1))  # Normalize for color spacing
+                color_map[col] = to_hex(rgba) #convert to a hex code
 
         
         elif color_mode == "Custom Pick": #pick colors individually
@@ -94,17 +97,38 @@ if input_file:
                     color = st.color_picker(f"Color for {col}", value="#000000", key=f"color_{col}",)
                     color_map[col] = color
 
-        fig, ax = plt.subplots(figsize=(10, 6))
-        for col in selected_cols:
-            ax.plot(x, ys[col], label=str(col), color=color_map.get(col, "#000000"))
-        ax.set_xlim(min_wavelength, max_wavelength)
-        ax.set_xticks(np.arange(int(min_wavelength), int(max_wavelength)+1, x_step))
-        ax.set_xlabel("Wavelength (nm)")
-        ax.set_ylabel("Abs")
-        if include_legend: 
-            ax.legend(loc='upper right', fontsize='small')
-        
-        st.pyplot(fig)
+        if interactive: 
+            fig = go.Figure()
+            for col in ys.columns:
+                fig.add_trace(go.Scatter(
+                    x=x,
+                    y=ys[col],
+                    mode='lines',
+                    line=dict(color=color_map.get(col, "#000000")), 
+                    name=str(col)  
+            ))
+                
+            fig.update_layout(
+            xaxis_title='Wavelength (nm)',
+            yaxis_title='Abs',
+            xaxis=dict(tickmode='linear', dtick=x_step, range=[x.min(), x.max()]),
+            template='plotly_white',
+            hovermode='x unified',
+            showlegend = False )
+
+            st.plotly_chart(fig, use_container_width=True)
+        else: 
+            fig, ax = plt.subplots(figsize=(10, 6))
+            for col in selected_cols:
+                ax.plot(x, ys[col], label=str(col), color=color_map.get(col, "#000000"))
+            ax.set_xlim(min_wavelength, max_wavelength)
+            ax.set_xticks(np.arange(int(min_wavelength), int(max_wavelength)+1, x_step))
+            ax.set_xlabel("Wavelength (nm)")
+            ax.set_ylabel("Abs")
+            if include_legend: 
+                ax.legend(loc='upper right', fontsize='small')
+                
+            st.pyplot(fig)
     else:
         st.warning("Please select at least one column to plot.")
 
