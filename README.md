@@ -9,8 +9,8 @@ Upload raw data from UV Spectrometer as a .csv file <br>
 Clean data to remove text descriptions and any unfinished trials <br> 
 Plot absorbance vs. wavelength in static (matplotlib) or interactive (plotly) 
 
-## File Controlls
-Dropped Trial: How many columns of data are excluded from normalization <br> 
+## File Controls
+Dropped Trials: How many columns of data are excluded from normalization <br> 
 
 ## Graph Features
 Minnimum Wavelength: Lower bound of the x-axis <br> 
