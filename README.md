@@ -17,11 +17,17 @@ Interactive: Toggle between static (matplotlib) and interactive (plotly) graph
 
 ## Graph Visuals
 
+> [!NOTE]
+> If something with the graphs looks wrong please look at the cleaned and normalized files to make sure the data is being proccessed correctly
+
+
 ## Download Files
 Cleaned File
 <ul> Drop text description of data collection method and instrumentation </ul>
 <ul> Drop unfinished trials </ul>
+<ul> Forward fill missing column headers</ul>
+
 > [!WARNING]
 > If the spectrometer did not come to a stop on its own then the trial may be dropped
 
-<ul> Forward fill missing column headers</ul>
+
