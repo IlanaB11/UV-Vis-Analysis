@@ -25,7 +25,7 @@ Interactive: Toggle between static (matplotlib) and interactive (plotly) graph
 
 
 ## Download Files
-###Cleaned File
+### Cleaned File
 <ul> Drop text description of data collection method and instrumentation </ul>
 <ul> Drop unfinished trials </ul>
 <ul> Forward fill missing column headers</ul>
