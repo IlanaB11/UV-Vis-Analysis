@@ -29,6 +29,7 @@ Interactive: Toggle between static (matplotlib) and interactive (plotly) graph
 <ul> Drop text description of data collection method and instrumentation </ul>
 <ul> Drop unfinished trials </ul>
 <ul> Forward fill missing column headers</ul>
+<ul> Renames first column to Wavelength (nm) and drops every other column (repeating the wavelength values) </ul>
 
 > [!WARNING]
 > If the spectrometer did not come to a stop on its own then the trial may be dropped
