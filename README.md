@@ -15,10 +15,10 @@ Maximum Wavelength: Upper bound of the x-axis <br>
 X Step: Distance between ticks on the x-axis <br> 
 Interactive: Toggle between static (matplotlib) and interactive (plotly) graph
 
-## Graph Visuals
-
 > [!NOTE]
 > If something with the graphs looks wrong please look at the cleaned and normalized files to make sure the data is being proccessed correctly
+
+## Graph Visuals
 
 
 ## Download Files
