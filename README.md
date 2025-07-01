@@ -1,6 +1,6 @@
 # UV-Vis-Analysis
 https://uv-vis-analysis-uuozfjbh5atnrzf6lzvzla.streamlit.app/ <br> 
-or download UV_ana_app.py and run 
+or download UV_ana_app.py and run <powershell> streamlit run UV_ana_app.py </powershell>
 
 Upload raw data from UV Spectrometer as a .csv file <br> 
 Clean data to remove text descriptions and any unfinished trials <br> 
