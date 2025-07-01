@@ -18,7 +18,9 @@ Interactive: Toggle between static (matplotlib) and interactive (plotly) graph
 ## Graph Visuals
 
 ## Download Files
-Cleaned File: remove text description, unfinished trails, and 
-
+Cleaned File
+<ul> Drop text description of data collection method and instrumentation </ul>
+<ul> Drop unfinished trials </ul>
 > [!WARNING]
-> This is how you write a warning.
+> If the spectrometer did not come to a stop on its own then the trial may be dropped
+<ul> Forward fill missing column headers</ul>
