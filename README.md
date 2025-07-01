@@ -13,19 +13,19 @@ Plot absorbance vs. wavelength in static (matplotlib) or interactive (plotly)
 Dropped Trials: How many columns of data are excluded from normalization <br> 
 
 ## Graph Features
-Minnimum Wavelength: Lower bound of the x-axis <br> 
-Maximum Wavelength: Upper bound of the x-axis <br> 
-X Step: Distance between ticks on the x-axis <br> 
-Interactive: Toggle between static (matplotlib) and interactive (plotly) graph
+Minnimum Wavelength: Lower bound of the x-axis (default 300 nm) <br> 
+Maximum Wavelength: Upper bound of the x-axis  (default 800nm) <br> 
+X Step: Distance between ticks on the x-axis  (default 100nm)<br> 
+Interactive: Toggle between static (matplotlib) and interactive (plotly) graph (default False)
 
 > [!NOTE]
 > If something with the graphs looks wrong please look at the cleaned and normalized files to make sure the data is being proccessed correctly
 
 ## Graph Visuals
-Select Trials: Select which columns of data to display on graph <br>
-Include Legend: Toggle legend display <br> 
+Select Trials: Select which columns of data to display on graph (default all) <br>
+Include Legend: Toggle legend display (default False) <br> 
 Color Customization
-<ul> Default: Use default matplotlib color</ul>
+<ul> Default: Use default matplotlib color </ul>
 <ul> Colormap: Select a preexisting [matplotlib color map](https://matplotlib.org/stable/users/explain/colors/colormaps.html)</ul>
 <ul>Custom: Custome set colors </ul>
 
