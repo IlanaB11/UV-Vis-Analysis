@@ -1,5 +1,5 @@
 # UV-Vis-Analysis
-https://uv-vis-analysis-uuozfjbh5atnrzf6lzvzla.streamlit.app/ <br> 
+[Access Streamlit website here](https://uv-vis-analysis-uuozfjbh5atnrzf6lzvzla.streamlit.app/)
 or download UV_ana_app.py and run 
 ```powershell
   streamlit run UV_ana_app.py
