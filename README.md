@@ -25,12 +25,22 @@ Interactive: Toggle between static (matplotlib) and interactive (plotly) graph
 
 
 ## Download Files
-Cleaned File
+###Cleaned File
 <ul> Drop text description of data collection method and instrumentation </ul>
 <ul> Drop unfinished trials </ul>
 <ul> Forward fill missing column headers</ul>
 
 > [!WARNING]
 > If the spectrometer did not come to a stop on its own then the trial may be dropped
+
+### Normalized File
+<ul> Restricted between minnimum wavelength and maximum wavelength</ul>
+<ul> Values (excluding baselines as specificed by dropped trials) are normalized </ul>
+<ul> Remove row containing unit labels </ul>
+
+> [!WARNING]
+> If data does not contain unit labels (or contains them somewhere else) this may drop the first row of data
+
+
 
 
