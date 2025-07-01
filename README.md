@@ -1,9 +1,11 @@
 # UV-Vis-Analysis
-Website Access: https://uv-vis-analysis-uuozfjbh5atnrzf6lzvzla.streamlit.app/ <br> 
+https://uv-vis-analysis-uuozfjbh5atnrzf6lzvzla.streamlit.app/ <br> 
+or download UV_ana_app.py and run 
 
 Upload raw data from UV Spectrometer as a .csv file <br> 
 Clean data to remove text descriptions and any unfinished trials <br> 
-[! WARNING] If a trial was not allowed to finish on its own it will be removed
+[! WARNING] 
+If a trial was not allowed to finish on its own it will be removed
 Plot absorbance vs. wavelength in static (matplotlib) or interactive (plotly) 
 
 ## File Controlls
