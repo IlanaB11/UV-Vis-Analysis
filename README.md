@@ -20,6 +20,6 @@ Interactive: Toggle between static (matplotlib) and interactive (plotly) graph
 ## Download Files
 Cleaned File: remove text description, unfinished trails, and 
 
-[! WARNING] 
+[!WARNING] 
 If a trial was not allowed to finish on its own it will be removed <br> 
 
