@@ -27,11 +27,18 @@ Include Legend: Toggle legend display (default False) <br>
 Color Customization
 - Default: Use default matplotlib color 
 - Colormap: Select a preexisting [Matplotlib color map](https://matplotlib.org/stable/users/explain/colors/colormaps.html) 
-- Custom: Custome set colors 
+- Custom: Custom set colors 
 
 > [!NOTE]
 > Which trials are selected does not change the normalization
 
+## Peak Selection
+Use lasso tool or box tool to select a region of the graph <br> 
+Selection results will contain the maximum y value and its x coordinate within the selected region for each line in the region <br> 
+Selection results can be downloaded as a .csv file or search for a specific trial
+
+>[!NOTE]
+> Shoulders may visually look like peaks but they are not so they are not detected
 
 ## Download Files
 ### Cleaned File
