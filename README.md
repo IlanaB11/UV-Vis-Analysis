@@ -1,5 +1,5 @@
 # UV-Vis-Analysis
-[Access Streamlit website here](https://uv-vis-analysis-uuozfjbh5atnrzf6lzvzla.streamlit.app/)
+[Access Streamlit website](https://uv-vis-analysis-uuozfjbh5atnrzf6lzvzla.streamlit.app/)
 or download UV_ana_app.py and run 
 ```powershell
   streamlit run UV_ana_app.py
@@ -27,11 +27,18 @@ Include Legend: Toggle legend display (default False) <br>
 Color Customization
 - Default: Use default matplotlib color 
 - Colormap: Select a preexisting [Matplotlib color map](https://matplotlib.org/stable/users/explain/colors/colormaps.html) 
-- Custom: Custome set colors 
+- Custom: Custom set colors 
 
 > [!NOTE]
 > Which trials are selected does not change the normalization
 
+## Peak Selection
+Use lasso tool or box tool to select a region of the graph <br> 
+Selection results will contain the maximum y value and its x coordinate within the selected region for each line in the region <br> 
+Selection results can be downloaded as a .csv file or search for a specific trial
+
+>[!NOTE]
+> Shoulders may visually look like peaks but they are not so they are not detected
 
 ## Download Files
 ### Cleaned File
@@ -51,6 +58,8 @@ Color Customization
 > [!WARNING]
 > If data does not contain unit labels (or contains them somewhere else) this may drop the first row of data
 
+### About Project
+I made this as a tool to help me with my UV Vis Analysis while doing research for a 6 week period over the summer. Any consistent errors my data or variation with how the UV-Vis Spectometer I used (INSERT BRAND AND MODEL) worked compared to others may affect the effectivness of this processing. It by no means works perfectly (and it is not really meant to since it is just a tool I made for myself) but please use it as you see fit. 
 
 
 
