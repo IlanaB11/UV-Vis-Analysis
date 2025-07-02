@@ -18,7 +18,7 @@ input_file = st.file_uploader("Upload CSV file", type=["csv"])
 st.write("<h3> File Controls </h3>", unsafe_allow_html = True)
 skip_cols = st.number_input("Number of Baseline Trials", value = 2) + 1
 st.write("Ex: if number of baseline trials is two there is a 100% baseline and a 0% baseline" )
-st.warning("Baseline rows will not be included in normalization")
+st.warning("Baseline Columns will not be included in normalization")
 contains_units = st.checkbox("Contains Unit Row", value = True)
 
 st.write(" <h3> Graph Features </h3> ", unsafe_allow_html = True)
@@ -115,7 +115,8 @@ if input_file:
                         'Trial: %{text}<br>' +  #control information displayed on hover
                         'Wavelength: %{x} nm<br>' +
                         'Absorbance: %{y}<extra></extra>',
-                    text=[col]*len(x)
+                    text=[col]*len(x), 
+                    
             ))
                 
             fig.update_layout(
@@ -130,6 +131,8 @@ if input_file:
                 fig.update_layout(showlegend = False)
 
             st.plotly_chart(fig, use_container_width=True)
+            st.write("Drop and drop to zoom")
+            st.write("Zooming only in the x-axis will flatten peaks and make then harder to see")
 
         else: #matplotlib static graph
             fig, ax = plt.subplots(figsize=(10, 6))
