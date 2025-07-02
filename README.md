@@ -25,9 +25,9 @@ Interactive: Toggle between static (matplotlib) and interactive (plotly) graph (
 Select Trials: Select which columns of data to display on graph (default all) <br>
 Include Legend: Toggle legend display (default False) <br> 
 Color Customization
-<ul> Default: Use default matplotlib color </ul>
-<ul> Colormap: Select a preexisting [matplotlib color map](https://matplotlib.org/stable/users/explain/colors/colormaps.html)</ul>
-<ul>Custom: Custome set colors </ul>
+- Default: Use default matplotlib color 
+- Colormap: Select a preexisting [Matplotlib color map](https://matplotlib.org/stable/users/explain/colors/colormaps.html) 
+- Custom: Custome set colors 
 
 > [!NOTE]
 > Which trials are selected does not change the normalization
@@ -35,18 +35,18 @@ Color Customization
 
 ## Download Files
 ### Cleaned File
-<ul> Drop text description of data collection method and instrumentation </ul>
-<ul> Drop unfinished trials </ul>
-<ul> Forward fill missing column headers</ul>
-<ul> Renames first column to Wavelength (nm) and drops every other column (repeating the wavelength values) </ul>
+- Drop text description of data collection method and instrumentation
+- Drop unfinished trials 
+- Forward fill missing column headers
+- Renames first column to Wavelength (nm) and drops every other column (repeating the wavelength values) 
 
 > [!WARNING]
 > If the spectrometer did not come to a stop on its own then the trial may be dropped
 
 ### Normalized File
-<ul> Restricted between minnimum wavelength and maximum wavelength</ul>
-<ul> Values (excluding baselines as specificed by dropped trials) are normalized </ul>
-<ul> Remove row containing unit labels </ul>
+- Restricted between minnimum wavelength and maximum wavelength
+- Values (excluding baselines as specificed by dropped trials) are normalized 
+- Remove row containing unit labels 
 
 > [!WARNING]
 > If data does not contain unit labels (or contains them somewhere else) this may drop the first row of data
