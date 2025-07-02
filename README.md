@@ -26,7 +26,7 @@ Select Trials: Select which columns of data to display on graph (default all) <b
 Include Legend: Toggle legend display (default False) <br> 
 Color Customization
 <ul> Default: Use default matplotlib color </ul>
-<ul> Colormap: Select a preexisting [matplotlib color map](https://matplotlib.org/stable/users/explain/colors/colormaps.html)</ul>
+<ul> Colormap: Select a preexisting [Matplotlib color map](https://matplotlib.org/stable/users/explain/colors/colormaps.html) </ul>
 <ul>Custom: Custome set colors </ul>
 
 > [!NOTE]
