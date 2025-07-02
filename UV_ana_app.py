@@ -6,8 +6,29 @@ import plotly.graph_objects as go
 import os
 from sklearn.preprocessing import MinMaxScaler
 from matplotlib.colors import to_hex
-from scipy.signal import find_peaks
+from collections import defaultdict
 
+def find_max(selection, fig): 
+    """Return a dictionary of the line and the x and y coordinates of the peak"""
+    grouped_points = defaultdict(list) #prevent key error 
+
+    for point in selection['points']: #group points by line
+        curve_num = point['curve_number']
+        grouped_points[curve_num].append(point)
+
+    max_points = []
+
+    for curve_num, points in grouped_points.items(): #find the max in each group
+        line_name = fig.data[curve_num].name
+        max_point = max(points, key=lambda p: p['y']) #find point with highest y-value
+
+        max_points.append({
+            "Trial": line_name,
+            "Max Wavelength (nm)": max_point['x'],
+            "Max Absorbance": max_point['y'],
+        })
+
+    return pd.DataFrame(max_points) #return values as a dataframe
 
 st.title("Spectra Cleaner & Visualizer")
 
@@ -101,6 +122,7 @@ if input_file:
                     color_map[col] = color
 
         if interactive: #plotly interactive graph 
+            st.write("Drop and drop select a region of peaks")
             fig = go.Figure()
            
             for col in ys.columns:
@@ -108,7 +130,7 @@ if input_file:
                 fig.add_trace(go.Scatter(
                     x=x,
                     y=y,
-                    mode='lines',
+                    mode='markers+lines',
                     line=dict(color=color_map.get(col, "#000000")), 
                     name=str(col), 
                     hovertemplate=
@@ -116,7 +138,7 @@ if input_file:
                         'Wavelength: %{x} nm<br>' +
                         'Absorbance: %{y}<extra></extra>',
                     text=[col]*len(x), 
-                    
+                    marker = dict(size = 2)  
             ))
                 
             fig.update_layout(
@@ -124,15 +146,28 @@ if input_file:
             yaxis_title='Abs',
             xaxis=dict(tickmode='linear', dtick=x_step, range=[x.min(), x.max()]),
             template='plotly_white',
-            hovermode='closest' #control what displays upon hover 
+            hovermode='closest',   #control what displays upon hover 
             )
 
             if not include_legend: #legend toggle 
                 fig.update_layout(showlegend = False)
 
-            st.plotly_chart(fig, use_container_width=True)
-            st.write("Drop and drop to zoom")
-            st.write("Zooming only in the x-axis will flatten peaks and make then harder to see")
+            event = st.plotly_chart( #selection happens 
+                            fig, 
+                            use_container_width=True,
+                            on_select="rerun",  # Rerun when selection changes
+                            selection_mode=['points', 'box', 'lasso'],  # Enable selection tools
+                            key="plotly_chart"
+                            )
+    
+            if 'plotly_chart' in st.session_state and st.session_state.plotly_chart: # if something has been selected
+                selection = st.session_state.plotly_chart.get('selection', {}) #what has been selected 
+
+                if selection and 'points' in selection and len(selection['points']) > 0: #if points have been selected 
+                    max_vals = find_max(selection, fig)
+                    
+                    st.subheader("Selection Results")
+                    st.dataframe(max_vals)
 
         else: #matplotlib static graph
             fig, ax = plt.subplots(figsize=(10, 6))
