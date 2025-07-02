@@ -1,15 +1,17 @@
-import streamlit as st
-import pandas as pd
+#
+
+import streamlit as st #for running the website
+import pandas as pd 
 import numpy as np
-import matplotlib.pyplot as plt
+import matplotlib.pyplot as plt 
 import plotly.graph_objects as go
-import os
-from sklearn.preprocessing import MinMaxScaler
-from matplotlib.colors import to_hex
-from collections import defaultdict
+import os #for file names 
+from sklearn.preprocessing import MinMaxScaler #for normalization 
+from matplotlib.colors import to_hex #for color customization 
+from collections import defaultdict #to prevent key error in find_max function
 
 def find_max(selection, fig): 
-    """Return a dictionary of the line and the x and y coordinates of the peak"""
+    """Return a dictionary of the line and the x and y coordinates of the peak from a selected range on a plotly figure"""
     grouped_points = defaultdict(list) #prevent key error 
 
     for point in selection['points']: #group points by line
@@ -19,8 +21,8 @@ def find_max(selection, fig):
     max_points = []
 
     for curve_num, points in grouped_points.items(): #find the max in each group
-        line_name = fig.data[curve_num].name
-        max_point = max(points, key=lambda p: p['y']) #find point with highest y-value
+        line_name = fig.data[curve_num].name #get the trial name from the figure
+        max_point = max(points, key=lambda p: p['y']) #find point with highest y-value and its coordinate x-value
 
         max_points.append({
             "Trial": line_name,
@@ -30,7 +32,7 @@ def find_max(selection, fig):
 
     return pd.DataFrame(max_points) #return values as a dataframe
 
-st.title("Spectra Cleaner & Visualizer")
+st.title("UV Vis Spectra Cleaner & Visualizer")
 
 # upload csv file
 input_file = st.file_uploader("Upload CSV file", type=["csv"])
@@ -97,11 +99,15 @@ if input_file:
     if selected_cols:
 
         #customize colors
+
+        if "color_map" not in st.session_state: # set up color map if it doesn't already exist in the session
+            st.session_state.color_map = {}
+
         color_mode = st.radio("Color Customization", ["Default", "Colormap", "Custom Pick"], index = 0, horizontal = True)
-        color_map = {}
+        color_map = st.session_state.color_map #set to session copy
 
         if color_mode == "Default": #default colors - matplot default 
-            default_colors = plt.rcParams['axes.prop_cycle'].by_key()['color']  
+            default_colors = plt.rcParams['axes.prop_cycle'].by_key()['color']
             for i, col in enumerate(selected_cols):
                 color_map[col] = default_colors[i % len(default_colors)]
      
@@ -115,17 +121,21 @@ if input_file:
                 color_map[col] = to_hex(rgba) #convert to a hex code - for plotly to use
 
         
-        elif color_mode == "Custom Pick": #pick colors individually
+        if color_mode == "Custom Pick":
             with st.expander("Pick Colors for Each Column", expanded=True):
-                for col in selected_cols:
-                    color = st.color_picker(f"Color for {col}", value="#000000", key=f"color_{col}",)
-                    color_map[col] = color
+                for col in selected_cols: # Use pre-computed color_map value as the default
+                    color = st.color_picker(
+                                f"Color for {col}",
+                                value=color_map.get(col, "#000000"), 
+                                key=f"color_{col}"
+                                )
+                    color_map[col] = color  # overwrite with user-selected color
 
         if interactive: #plotly interactive graph 
             st.write("Drop and drop select a region of peaks")
             fig = go.Figure()
            
-            for col in ys.columns:
+            for col in ys.columns: #plot each column 
                 y = ys[col]
                 fig.add_trace(go.Scatter(
                     x=x,
@@ -133,12 +143,12 @@ if input_file:
                     mode='markers+lines',
                     line=dict(color=color_map.get(col, "#000000")), 
                     name=str(col), 
+                    text=[col]*len(x), 
                     hovertemplate=
-                        'Trial: %{text}<br>' +  #control information displayed on hover
+                        'Trial: %{text}<br>' +  #control information displayed on hover for each line
                         'Wavelength: %{x} nm<br>' +
                         'Absorbance: %{y}<extra></extra>',
-                    text=[col]*len(x), 
-                    marker = dict(size = 2)  
+                    marker = dict(size = 2) #small size so the markers can't be seen but they can be selected 
             ))
                 
             fig.update_layout(
@@ -146,7 +156,7 @@ if input_file:
             yaxis_title='Abs',
             xaxis=dict(tickmode='linear', dtick=x_step, range=[x.min(), x.max()]),
             template='plotly_white',
-            hovermode='closest',   #control what displays upon hover 
+            hovermode='closest',   #control what displays upon hover of the overall graph 
             )
 
             if not include_legend: #legend toggle 
@@ -164,14 +174,14 @@ if input_file:
                 selection = st.session_state.plotly_chart.get('selection', {}) #what has been selected 
 
                 if selection and 'points' in selection and len(selection['points']) > 0: #if points have been selected 
-                    max_vals = find_max(selection, fig)
+                    max_vals = find_max(selection, fig) 
                     
                     st.subheader("Selection Results")
-                    st.dataframe(max_vals)
+                    st.dataframe(max_vals) #a table of the trials and max values 
 
         else: #matplotlib static graph
             fig, ax = plt.subplots(figsize=(10, 6))
-            for col in selected_cols:
+            for col in selected_cols: #plot each column on the same axis 
                 ax.plot(x, ys[col], label=str(col), color=color_map.get(col, "#000000"))
             ax.set_xlim(min_wavelength, max_wavelength)
             ax.set_xticks(np.arange(int(min_wavelength), int(max_wavelength)+1, x_step))
@@ -187,5 +197,21 @@ if input_file:
     #downloads
     st.write(" <h3> Files </h3> ", unsafe_allow_html = True)
     st.write("If something with the graphs looks wrong please look at the cleaned and normalized files to make sure the data is being proccessed correctly")
-    st.download_button("Download Cleaned CSV", df_clean.to_csv(index=False).encode(), file_name=cleaned_filename)
-    st.download_button("Download Normalized CSV", df_normalized.to_csv(index=False).encode(), file_name=normalized_filename)
+
+    st.download_button("Download Cleaned CSV", df_clean.to_csv(index=False).encode(), file_name=cleaned_filename) #download cleaned file 
+    st.download_button("Download Normalized CSV", df_normalized.to_csv(index=False).encode(), file_name=normalized_filename) #download normalized file
+
+st.markdown( #add a link to the github repo (and the github logo because I wanted to be fancy)
+    """
+    <hr style='margin-top: 2em;'>
+    <small>
+        For more information about how the data is processed, 
+        see the 
+        <a href="https://github.com/IlanaB11/UV-Vis-Analysis/tree/main"> 
+            GitHub repository <img src="https://github.githubassets.com/images/modules/logos_page/GitHub-Mark.png" 
+            width="16" style="vertical-align: text-bottom;">
+        </a>.
+    </small>
+    """,
+    unsafe_allow_html=True
+)
