@@ -1,5 +1,3 @@
-#
-
 import streamlit as st #for running the website
 import pandas as pd 
 import numpy as np
@@ -10,6 +8,7 @@ from sklearn.preprocessing import MinMaxScaler #for normalization
 from matplotlib.colors import to_hex #for color customization 
 from collections import defaultdict #to prevent key error in find_max function
 
+#functions
 def find_max(selection, fig): 
     """Return a dictionary of the line and the x and y coordinates of the peak from a selected range on a plotly figure"""
     grouped_points = defaultdict(list) #prevent key error 
@@ -28,56 +27,86 @@ def find_max(selection, fig):
             "Trial": line_name,
             "Max Wavelength (nm)": max_point['x'],
             "Max Absorbance": max_point['y'],
+            "Save Peak": False #Will this display and should I make it a seperate dict of the same length instead? 
         })
 
     return pd.DataFrame(max_points) #return values as a dataframe
 
+#session value checks: 
+if 'wavelength_len' in st.session_state:
+    del st.session_state['wavelength_len']
+
 st.title("UV Vis Spectra Cleaner & Visualizer")
 
-# upload csv file
-input_file = st.file_uploader("Upload CSV file", type=["csv"])
+# upload csv files
+input_files = st.file_uploader("Upload CSV file", type=["csv"], accept_multiple_files = True)
 
 # user inputs for information about the data
 st.write("<h3> File Controls </h3>", unsafe_allow_html = True)
-skip_cols = st.number_input("Number of Baseline Trials", value = 2) + 1
+skip_cols = st.number_input("Number of Baseline Trials", value = 2) + 1 #number of columns skipped
 st.write("Ex: if number of baseline trials is two there is a 100% baseline and a 0% baseline" )
 st.warning("Baseline Columns will not be included in normalization")
-contains_units = st.checkbox("Contains Unit Row", value = True)
+contains_units = st.checkbox("Contains Unit Row", value = True) #if the row needs to be dropped
 
 st.write(" <h3> Graph Features </h3> ", unsafe_allow_html = True)
-min_wavelength = st.number_input("Minimum wavelength (nm)", value=300)
+min_wavelength = st.number_input("Minimum wavelength (nm)", value=300) #wavelength range
 max_wavelength = st.number_input("Maximum wavelength (nm)", value=800)
-x_step = st.number_input("X step (nm)", value = 100, min_value = 1)
-interactive = st.toggle("Interactive Plot", value = False) #toggle between matplot and plotly graphs
+x_step = st.number_input("X step (nm)", value = 100, min_value = 1) #x ticks
+interactive = st.toggle("Interactive Plot", value = True) #toggle between matplot and plotly graphs
 
 
-if input_file:
+if input_files:
+    combined_clean = []
 
-    filename = input_file.name  
-    base_name = os.path.splitext(filename)[0] #remove .csv
-    cleaned_filename = f"{base_name}_cleaned.csv" #autocreate cleaned and normilized file names
-    normalized_filename = f"{base_name}_normalized.csv"
+    for input_file in input_files:
+        filename = input_file.name  
+        #base_name = os.path.splitext(filename)[0] #remove .csv
+        #cleaned_filename = f"{base_name}_cleaned.csv" #autocreate cleaned and normilized file names
+        #normalized_filename = f"{base_name}_normalized.csv"
 
-    #read file
-    df = pd.read_csv(input_file, header = None)
+        #read file
+        df = pd.read_csv(input_file, header = None)
 
-    #clean data
-    df_clean = df.copy()
+        #clean data
+        df_clean = df.copy()
 
-    df_clean = df_clean.astype(object)  # convert all columns to object dtype
-    df_clean.iloc[0] = df_clean.iloc[0].ffill()
-    df_clean.dropna(subset=[df_clean.columns[-2]], inplace = True) #drop rows with NaN in the last column - removed all the descriptive rows
-    df_clean.dropna(axis=1, inplace = True) # remove any columns that have null values - incomplete data
-    df_clean.columns = range(df_clean.shape[1]) #reset column names after dropping columns
-    df_clean.drop(columns= df_clean.columns[(df_clean.columns != 0) & (df_clean.columns % 2 == 0)], inplace = True) #drop even numbered columns (repeats of wavelength)
-    df_clean.iat[0, 0] = 'Wavelength (nm)' #set the first cell to be the wavelength column name
-    df_clean.columns = df_clean.iloc[0] # set the first row as the column names
-    df_clean.drop(index=[0], inplace=True) # drop first duplicate row
-   
+        df_clean = df_clean.astype(object)  # convert all columns to object dtype
+        df_clean.iloc[0] = df_clean.iloc[0].ffill() #forward fill the column names
+        df_clean.dropna(subset=[df_clean.columns[-2]], inplace = True) #drop rows with NaN in the last column - removed all the descriptive rows
+        df_clean.dropna(axis=1, inplace = True) # remove any columns that have null values - incomplete data
+        df_clean.columns = range(df_clean.shape[1]) #reset column names after dropping columns
+        df_clean.drop(columns= df_clean.columns[(df_clean.columns != 0) & (df_clean.columns % 2 == 0)], inplace = True) #drop even numbered columns (repeats of wavelength)
+        df_clean.iat[0, 0] = 'Wavelength (nm)' #set the first cell to be the wavelength column name
+        df_clean.columns = df_clean.iloc[0] # set the first row as the column names
+        df_clean.drop(index=[0], inplace=True) # drop first duplicate row
 
-    df_normalized = df_clean.loc[pd.to_numeric(df_clean.iloc[:, 0], errors='coerce').between(min_wavelength, max_wavelength)]
+        #Throw an error if files have different wavelength ranges
+        wavelengths = pd.to_numeric(df_clean.iloc[:, 0], errors='coerce')
+        wavelengths = wavelengths.dropna() #remove nulls just in case
+        file_range = (wavelengths.min(), wavelengths.max()) #wavelength range
+
+        if 'wavelength_range' not in st.session_state: #store as session variable
+            st.session_state.wavelength_range = file_range
+        else:
+            if file_range != st.session_state.wavelength_range:
+                st.error(f"File '{filename}' has wavelength range {file_range[0]}–{file_range[1]} nm, which does not match "
+                        f"the first file's range of {st.session_state.wavelength_range[0]}–{st.session_state.wavelength_range[1]} nm.")
+                st.stop()
+
+        combined_clean.append(df_clean)
+
+    #merge on wavelength column 
+    df_clean_comb = combined_clean[0]
+    for i in range(1, len(combined_clean)):
+        df_clean_comb = df_clean_comb.merge(combined_clean[i], on='Wavelength (nm)', how='outer')
+
+    df_clean_comb.sort_values(by='Wavelength (nm)', inplace=True) #sort values
+
+    #normalize everything on the same scale
+    df_normalized = df_clean_comb.loc[pd.to_numeric(df_clean.iloc[:, 0], errors='coerce').between(min_wavelength, max_wavelength)]
     df_normalized.reset_index(drop=True, inplace=True) # reset indexes 
-    df_normalized.drop(index=[1], inplace=True) 
+    if contains_units: 
+        df_normalized.drop(index=[1], inplace=True) #drop unit row 
     scaler = MinMaxScaler()
     df_normalized.iloc[:, skip_cols:] = scaler.fit_transform(df_normalized.iloc[:, skip_cols:])
 
@@ -197,9 +226,10 @@ if input_file:
     #downloads
     st.write(" <h3> Files </h3> ", unsafe_allow_html = True)
     st.write("If something with the graphs looks wrong please look at the cleaned and normalized files to make sure the data is being proccessed correctly")
+    filename = st.text_input("What would you like to name your files?", placeholder = "UserFiles") #set filename
 
-    st.download_button("Download Cleaned CSV", df_clean.to_csv(index=False).encode(), file_name=cleaned_filename) #download cleaned file 
-    st.download_button("Download Normalized CSV", df_normalized.to_csv(index=False).encode(), file_name=normalized_filename) #download normalized file
+    st.download_button("Download Cleaned CSV", df_clean.to_csv(index=False).encode(), file_name= filename + "_cleaned") #download cleaned file 
+    st.download_button("Download Normalized CSV", df_normalized.to_csv(index=False).encode(), file_name= filename + "_normalized") #download normalized file
 
 st.markdown( #add a link to the github repo (and the github logo because I wanted to be fancy)
     """
