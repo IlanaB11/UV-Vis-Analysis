@@ -10,9 +10,9 @@ Clean data to remove text descriptions and any unfinished trials <br>
 Plot absorbance vs. wavelength in static (matplotlib) or interactive (plotly) 
 
 ## File Controls
-Baseline Trials: How many columns of data are excluded from normalization <br> 
-Contains Unit Rows: Drops the first row containing unit values <br> 
-Wavelength Column Repeats: Drops every other column to remove duplicates <br> 
+Baseline Trials: How many columns of data are excluded from normalization (default 2 for 100% and 0% baselines) <br> 
+Contains Unit Rows: Drops the first row containing unit values (default True)<br> 
+Wavelength Column Repeats: Drops every other column to remove duplicates (default True) <br> 
 
 It is possible to upload mulitple files as long as they all require the same controls and the same range of wavelengths. 
 
@@ -20,7 +20,7 @@ It is possible to upload mulitple files as long as they all require the same con
 Minnimum Wavelength: Lower bound of the x-axis (default 300 nm) <br> 
 Maximum Wavelength: Upper bound of the x-axis  (default 800nm) <br> 
 X Step: Distance between ticks on the x-axis  (default 100nm)<br> 
-Interactive: Toggle between static (matplotlib) and interactive (plotly) graph (default False)
+Interactive: Toggle between static (matplotlib) and interactive (plotly) graph (default True for interactive graph)
 
 > [!NOTE]
 > If something with the graphs looks wrong please look at the cleaned and normalized files to make sure the data is being proccessed correctly
