@@ -96,18 +96,24 @@ if input_files:
                 st.error(f"File '{filename}' has wavelength range {file_range[0]}–{file_range[1]} nm, which does not match "
                         f"the first file's range of {st.session_state.wavelength_range[0]}–{st.session_state.wavelength_range[1]} nm.")
                 st.stop()
-
-        combined_clean.append(df_clean)
+        
+        combined_clean.append(pd.concat([df_clean.iloc[:, 0], df_clean.iloc[:, skip_cols:]], axis=1)) #wavelength and non_baseline columns
 
     #merge on wavelength column 
-    df_clean_comb = combined_clean[0]
-    for i in range(1, len(combined_clean)):
+    df_clean_comb = df_clean.iloc[: , :skip_cols] #start with wavelengths and baseline - from last file uploaded
+    for i in range(0, len(combined_clean)): #add the data from each file
         df_clean_comb = df_clean_comb.merge(combined_clean[i], on='Wavelength (nm)', how='outer')
 
     df_clean_comb.sort_values(by='Wavelength (nm)', inplace=True) #sort values
 
+    if len(input_files) > 1:
+        st.warning(
+            f"The baseline used in the final dataset is taken from the file: **'{input_files[-1].name}'**.\n\n"
+            "If different files have different baselines, this may not reflect the actual baseline conditions for all data."
+        ) #baseline warning
+
     #normalize everything on the same scale
-    df_normalized = df_clean_comb.loc[pd.to_numeric(df_clean.iloc[:, 0], errors='coerce').between(min_wavelength, max_wavelength)]
+    df_normalized = df_clean_comb.loc[pd.to_numeric(df_clean_comb.iloc[:, 0], errors='coerce').between(min_wavelength, max_wavelength)]
     df_normalized.reset_index(drop=True, inplace=True) # reset indexes 
     if contains_units: 
         df_normalized.drop(index=[1], inplace=True) #drop unit row 
@@ -132,7 +138,6 @@ if input_files:
     if selected_cols:
 
         #customize colors
-
         if "color_map" not in st.session_state: # set up color map if it doesn't already exist in the session
             st.session_state.color_map = {}
 
@@ -168,7 +173,7 @@ if input_files:
             st.write("Drop and drop select a region of peaks")
             fig = go.Figure()
            
-            for col in ys.columns: #plot each column 
+            for col in selected_cols: #plot each column 
                 y = ys[col]
                 fig.add_trace(go.Scatter(
                     x=x,
@@ -209,6 +214,7 @@ if input_files:
                 if selection and 'points' in selection and len(selection['points']) > 0: #if points have been selected 
                     max_vals = find_max(selection, fig) 
                     
+                    st.warning("Save Peaks is under construction and currently does not work") #add FIXME warning
                     st.subheader("Selection Results")
                     st.dataframe(max_vals) #a table of the trials and max values 
 
@@ -230,9 +236,9 @@ if input_files:
     #downloads
     st.write(" <h3> Files </h3> ", unsafe_allow_html = True)
     st.write("If something with the graphs looks wrong please look at the cleaned and normalized files to make sure the data is being proccessed correctly")
-    filename = st.text_input("What would you like to name your files?", placeholder = "UserFiles") #set filename
+    filename = st.text_input("What would you like to name your files?", placeholder = "File Name") #set filename
 
-    st.download_button("Download Cleaned CSV", df_clean.to_csv(index=False).encode(), file_name= filename + "_cleaned") #download cleaned file 
+    st.download_button("Download Cleaned CSV", df_clean_comb.to_csv(index=False).encode(), file_name= filename + "_cleaned") #download cleaned file 
     st.download_button("Download Normalized CSV", df_normalized.to_csv(index=False).encode(), file_name= filename + "_normalized") #download normalized file
 
 st.markdown( #add a link to the github repo (and the github logo because I wanted to be fancy)
