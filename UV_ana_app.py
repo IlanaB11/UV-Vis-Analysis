@@ -47,6 +47,7 @@ skip_cols = st.number_input("Number of Baseline Trials", value = 2) + 1 #number 
 st.write("Ex: if number of baseline trials is two there is a 100% baseline and a 0% baseline" )
 st.warning("Baseline Columns will not be included in normalization")
 contains_units = st.checkbox("Contains Unit Row", value = True) #if the row needs to be dropped
+repeats_wavelength = st.checkbox("Wavelength Column Repeats For Each Trial", value = True)
 
 st.write(" <h3> Graph Features </h3> ", unsafe_allow_html = True)
 min_wavelength = st.number_input("Minimum wavelength (nm)", value=300) #wavelength range
@@ -70,12 +71,15 @@ if input_files:
         #clean data
         df_clean = df.copy()
 
+       
         df_clean = df_clean.astype(object)  # convert all columns to object dtype
-        df_clean.iloc[0] = df_clean.iloc[0].ffill() #forward fill the column names
+        if repeats_wavelength: 
+            df_clean.iloc[0] = df_clean.iloc[0].ffill() #forward fill the column names
         df_clean.dropna(subset=[df_clean.columns[-2]], inplace = True) #drop rows with NaN in the last column - removed all the descriptive rows
         df_clean.dropna(axis=1, inplace = True) # remove any columns that have null values - incomplete data
         df_clean.columns = range(df_clean.shape[1]) #reset column names after dropping columns
-        df_clean.drop(columns= df_clean.columns[(df_clean.columns != 0) & (df_clean.columns % 2 == 0)], inplace = True) #drop even numbered columns (repeats of wavelength)
+        if repeats_wavelength: 
+            df_clean.drop(columns= df_clean.columns[(df_clean.columns != 0) & (df_clean.columns % 2 == 0)], inplace = True) #drop even numbered columns (repeats of wavelength)
         df_clean.iat[0, 0] = 'Wavelength (nm)' #set the first cell to be the wavelength column name
         df_clean.columns = df_clean.iloc[0] # set the first row as the column names
         df_clean.drop(index=[0], inplace=True) # drop first duplicate row
