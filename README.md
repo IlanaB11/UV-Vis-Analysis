@@ -10,7 +10,11 @@ Clean data to remove text descriptions and any unfinished trials <br>
 Plot absorbance vs. wavelength in static (matplotlib) or interactive (plotly) 
 
 ## File Controls
-Dropped Trials: How many columns of data are excluded from normalization <br> 
+Baseline Trials: How many columns of data are excluded from normalization <br> 
+Contains Unit Rows: Drops the first row containing unit values <br> 
+Wavelength Column Repeats: Drops every other column to remove duplicates <br> 
+
+It is possible to upload mulitple files as long as they all require the same controls and the same range of wavelengths. 
 
 ## Graph Features
 Minnimum Wavelength: Lower bound of the x-axis (default 300 nm) <br> 
@@ -39,6 +43,9 @@ Selection results can be downloaded as a .csv file or search for a specific tria
 
 >[!NOTE]
 > Shoulders may visually look like peaks but they are not so they are not detected
+
+## Save Peaks
+Feature incomplete
 
 ## Download Files
 ### Cleaned File
