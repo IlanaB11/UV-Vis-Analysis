@@ -51,7 +51,7 @@ repeats_wavelength = st.checkbox("Wavelength Column Repeats For Each Trial", val
 
 st.write(" <h3> Graph Features </h3> ", unsafe_allow_html = True)
 min_wavelength = st.number_input("Minimum wavelength (nm)", value=300) #wavelength range
-max_wavelength = st.number_input("Maximum wavelength (nm)", value=800)
+max_wavelength = st.number_input("Maximum wavelength (nm)", value=1000)
 x_step = st.number_input("X step (nm)", value = 100, min_value = 1) #x ticks
 interactive = st.toggle("Interactive Plot", value = True) #toggle between matplot and plotly graphs
 
@@ -111,14 +111,17 @@ if input_files:
             f"The baseline used in the final dataset is taken from the file: **'{input_files[-1].name}'**.\n\n"
             "If different files have different baselines, this may not reflect the actual baseline conditions for all data."
         ) #baseline warning
-
+    
     #normalize everything on the same scale
     df_normalized = df_clean_comb.loc[pd.to_numeric(df_clean_comb.iloc[:, 0], errors='coerce').between(min_wavelength, max_wavelength)]
     df_normalized.reset_index(drop=True, inplace=True) # reset indexes 
     if contains_units: 
         df_normalized.drop(index=[1], inplace=True) #drop unit row 
+    absorbance_values = df_normalized.iloc[:, skip_cols:].values.flatten().reshape(-1, 1) 
     scaler = MinMaxScaler()
-    df_normalized.iloc[:, skip_cols:] = scaler.fit_transform(df_normalized.iloc[:, skip_cols:])
+    df_normalized.iloc[:, skip_cols:] = scaler.fit_transform(
+        df_normalized.iloc[:, skip_cols:].values.flatten().reshape(-1, 1) #flatten dataframe to scale on the same level
+        ).reshape(df_normalized.iloc[:, skip_cols:].shape) #reshape it back to the dataframe
 
     #set x and y
     x = pd.to_numeric(df_normalized.iloc[:, 0])
