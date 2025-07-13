@@ -66,7 +66,9 @@ Feature incomplete
 > If data does not contain unit labels (or contains them somewhere else) this may drop the first row of data
 
 ### About Project
-I made this as a tool to help me with my UV Vis Analysis while doing research for a 6 week period over the summer. Any consistent errors my data or variation with how the UV-Vis Spectometer I used (INSERT BRAND AND MODEL) worked compared to others may affect the effectivness of this processing. It by no means works perfectly (and it is not really meant to since it is just a tool I made for myself) but please use it as you see fit. 
+I made this as a tool to help me with my UV Vis Analysis while doing research for a 6 week period over the summer. Any consistent errors my data or variation with how the UV-Vis Spectometer I used (INSERT BRAND AND MODEL) worked compared to others may affect the effectivness of this processing. It by no means works perfectly (and it is not really meant to since it is just a tool I made for myself) but please use it as you see fit. <br> <br> 
+
+Made to process data collected from Agilent Cary 60 UV-Vis by the program Cary WinUV Scan Application version 5.1.3.1042
 
 
 
