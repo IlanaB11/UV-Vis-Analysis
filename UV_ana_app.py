@@ -33,8 +33,8 @@ def find_max(selection, fig):
     return pd.DataFrame(max_points) #return values as a dataframe
 
 #session value checks: 
-if 'wavelength_len' in st.session_state:
-    del st.session_state['wavelength_len']
+#if 'wavelength_len' in st.session_state:
+    #del st.session_state['wavelength_len']
 
 st.title("UV Vis Spectra Cleaner & Visualizer")
 
@@ -71,7 +71,6 @@ if input_files:
         #clean data
         df_clean = df.copy()
 
-       
         df_clean = df_clean.astype(object)  # convert all columns to object dtype
         if repeats_wavelength: 
             df_clean.iloc[0] = df_clean.iloc[0].ffill() #forward fill the column names
@@ -85,21 +84,21 @@ if input_files:
         df_clean.drop(index=[0], inplace=True) # drop first duplicate row
 
         #Throw an error if files have different wavelength ranges
-        wavelengths = pd.to_numeric(df_clean.iloc[:, 0], errors='coerce')
-        wavelengths = wavelengths.dropna() #remove nulls just in case
-        file_range = (wavelengths.min(), wavelengths.max()) #wavelength range
+        #wavelengths = pd.to_numeric(df_clean.iloc[:, 0], errors='coerce')
+        #wavelengths = wavelengths.dropna() #remove nulls just in case
+        #file_range = (wavelengths.min(), wavelengths.max()) #wavelength range
 
-        if 'wavelength_range' not in st.session_state: #store as session variable
-            st.session_state.wavelength_range = file_range
-        else:
-            if file_range != st.session_state.wavelength_range:
-                st.error(f"File '{filename}' has wavelength range {file_range[0]}–{file_range[1]} nm, which does not match "
-                        f"the first file's range of {st.session_state.wavelength_range[0]}–{st.session_state.wavelength_range[1]} nm.")
-                st.stop()
+        #if 'wavelength_range' not in st.session_state: #store as session variable
+            #st.session_state.wavelength_range = file_range
+        #else:
+            #if file_range != st.session_state.wavelength_range:
+                #st.error(f"File '{filename}' has wavelength range {file_range[0]}–{file_range[1]} nm, which does not match "
+                       # f"the first file's range of {st.session_state.wavelength_range[0]}–{st.session_state.wavelength_range[1]} nm.")
+                #st.stop()
         
         combined_clean.append(pd.concat([df_clean.iloc[:, 0], df_clean.iloc[:, skip_cols:]], axis=1)) #wavelength and non_baseline columns
 
-    #merge on wavelength column 
+    #merge on wavelength column
     df_clean_comb = df_clean.iloc[: , :skip_cols] #start with wavelengths and baseline - from last file uploaded
     for i in range(0, len(combined_clean)): #add the data from each file
         df_clean_comb = df_clean_comb.merge(combined_clean[i], on='Wavelength (nm)', how='outer')
@@ -115,7 +114,7 @@ if input_files:
     #select specific columns
     selected_cols = [] 
     with st.expander("Select Trials", expanded = False):
-        for col in df_clean.columns[1:]:
+        for col in df_clean_comb.columns[skip_cols:]:
             if st.checkbox(col, value=True):  
                 selected_cols.append(col)
     
