@@ -3,7 +3,8 @@ import pandas as pd
 import numpy as np
 import matplotlib.pyplot as plt 
 import plotly.graph_objects as go
-import os #for file names 
+import io #for inline graphing
+import base64 #for inline graphing
 from sklearn.preprocessing import MinMaxScaler #for normalization 
 from matplotlib.colors import to_hex #for color customization 
 from collections import defaultdict #to prevent key error in find_max function
@@ -27,14 +28,31 @@ def find_max(selection, fig):
             "Trial": line_name,
             "Max Wavelength (nm)": max_point['x'],
             "Max Absorbance": max_point['y'],
-            "Save Peak": False #Will this display and should I make it a seperate dict of the same length instead? 
+            "Save Peak": False, 
+            #"Color": color_map.get(line_name, "#000000") #add line color - not currently supported by streamlit unless I want to generate a bunch of images
         })
 
     return pd.DataFrame(max_points) #return values as a dataframe
 
+def create_peak_plot_base64(x, y, peak_x, peak_y, color="#000000"): #create an image of the graphs to display on selection
+    fig, ax = plt.subplots(figsize=(2, 1))
+    ax.plot(x, y, color=color, linewidth=1) #plot the line
+    ax.scatter(peak_x, peak_y, color="black", zorder=5, s=10) #add point for the peak
+    ax.axis('off')
+    plt.tight_layout()
+
+    buf = io.BytesIO() #save as image
+    plt.savefig(buf, format="png", dpi=100)
+    plt.close(fig)
+    buf.seek(0)
+    return f"data:image/png;base64,{base64.b64encode(buf.read()).decode()}" #return image directions
+
 #session value checks: 
 #if 'wavelength_len' in st.session_state:
     #del st.session_state['wavelength_len']
+
+if "saved_peaks" not in st.session_state: #if results have not already been saved
+    st.session_state.saved_peaks = pd.DataFrame(columns=["Trial", "Max Wavelength (nm)", "Max Absorbance", "Peak"]) #create a dataframe to save them to
 
 st.title("UV Vis Spectra Cleaner & Visualizer")
 
@@ -49,6 +67,7 @@ st.warning("Baseline Columns will not be included in normalization")
 contains_units = st.checkbox("Contains Unit Row", value = True) #if the row needs to be dropped
 repeats_wavelength = st.checkbox("Wavelength Column Repeats For Each Trial", value = True)
 
+st.markdown("---")
 st.write(" <h3> Graph Features </h3> ", unsafe_allow_html = True)
 min_wavelength = st.number_input("Minimum wavelength (nm)", value=300) #wavelength range
 max_wavelength = st.number_input("Maximum wavelength (nm)", value=1000)
@@ -141,6 +160,7 @@ if input_files:
     x = pd.to_numeric(df_normalized.iloc[:, 0])
     ys = df_normalized.iloc[:, skip_cols:]
 
+    st.markdown("---")
     st.write(" <h3> Graph Visuals </h3> ", unsafe_allow_html = True)
                 
     include_legend = st.checkbox("Include Legend in Plot", value = False) #legend toggle
@@ -178,6 +198,8 @@ if input_files:
                                 key=f"color_{col}"
                                 )
                     color_map[col] = color  # overwrite with user-selected color
+
+        st.markdown("---")
 
         if interactive: #plotly interactive graph 
             st.write("Drop and drop select a region of peaks")
@@ -223,13 +245,47 @@ if input_files:
                 selection = st.session_state.plotly_chart.get('selection', {}) #what has been selected 
 
                 if selection and 'points' in selection and len(selection['points']) > 0: #if points have been selected 
-                    max_vals = find_max(selection, fig) 
-                    
-                    st.warning("Save Peaks is under construction and currently does not work") #add FIXME warning
-                    st.subheader("Selection Results")
-                    st.dataframe(max_vals) #a table of the trials and max values 
+                    max_vals = find_max(selection, fig)
 
-        else: #matplotlib static graph
+                    #add a graph of each line with the peak marked
+                    plots = []
+                    for _, row in max_vals.iterrows():
+                        if row["Trial"] in ys.columns: #create a plot for each line
+                            y_data = ys[row["Trial"]]
+                            plot_md = create_peak_plot_base64( #use function to make an image
+                                x, y_data,
+                                row["Max Wavelength (nm)"],
+                                row["Max Absorbance"],
+                                color=color_map.get(row["Trial"], "#000000") #using line color
+                            )
+                            plots.append(plot_md) #append to list
+                        else:
+                            plots.append("")
+                    
+                    max_vals["Peak"] = plots #add to dataframe
+
+                    #peak selection 
+                    edited_peaks = st.data_editor(max_vals, num_rows="fixed", key="peak_editor", 
+                                                  column_config={
+                                                                "Trial": st.column_config.TextColumn(disabled=True), #can't change trial number (random index)
+                                                                "Max Wavelength (nm)": st.column_config.NumberColumn(disabled=True), #can't change value
+                                                                "Max Absorbance": st.column_config.NumberColumn(disabled=True), #can't change value
+                                                                "Save Peak": st.column_config.CheckboxColumn(disabled=False), #allow checkbox toggling
+                                                                "Peak": st.column_config.ImageColumn()
+                                                                }) 
+                    for _, row in edited_peaks.iterrows():
+                        if row["Save Peak"]: #add peaks where button has been pushed
+                            if not ((st.session_state.saved_peaks["Trial"] == row["Trial"]) & (st.session_state.saved_peaks["Max Wavelength (nm)"] == row["Max Wavelength (nm)"])).any(): #remove repeats
+                                st.session_state.saved_peaks = pd.concat([st.session_state.saved_peaks, pd.DataFrame([row.drop("Save Peak")])], ignore_index=True) # add to saved dataframe without button row
+
+                    #st.warning("Save Peaks is under construction and currently does not work") #add FIXME warning
+                st.markdown("---")
+                st.subheader("Saved Peaks")
+                st.dataframe(st.session_state.saved_peaks,  column_config = {"Peak": st.column_config.ImageColumn()})
+
+                if st.button("Clear Saved Peaks: FIXME"): #clear button: FIXME
+                    st.session_state.saved_peaks = pd.DataFrame(columns=["Trial", "Max Wavelength (nm)", "Max Absorbance", "Peak"]) #reset the dataframe
+        else:
             fig, ax = plt.subplots(figsize=(10, 6))
             for col in plot_cols: #plot each column on the same axis 
                 ax.plot(x, ys[col], label=str(col), color=color_map.get(col, "#000000"))
@@ -246,6 +302,7 @@ if input_files:
         st.warning("Please select at least one column to plot.")
 
     #downloads
+    st.markdown("---")
     st.write(" <h3> Files </h3> ", unsafe_allow_html = True)
     st.write("If something with the graphs looks wrong please look at the cleaned and normalized files to make sure the data is being proccessed correctly")
     filename = st.text_input("What would you like to name your files?", placeholder = "File Name") #set filename
@@ -264,6 +321,8 @@ st.markdown( #add a link to the github repo (and the github logo because I wante
             width="16" style="vertical-align: text-bottom;">
         </a>.
     </small>
+    <br>
+    <sub> This site was made with help from ChatGPT and Claude.AI </sub>
     """,
     unsafe_allow_html=True
 )
