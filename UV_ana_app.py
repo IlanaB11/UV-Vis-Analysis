@@ -112,34 +112,42 @@ if input_files:
             "If different files have different baselines, this may not reflect the actual baseline conditions for all data."
         ) #baseline warning
     
-    #normalize everything on the same scale
+    #select specific columns
+    selected_cols = [] 
+    with st.expander("Select Trials", expanded = False):
+        for col in df_clean.columns[1:]:
+            if st.checkbox(col, value=True):  
+                selected_cols.append(col)
+    
+    #add option to only normalize selected columns
+    normalize_select = st.checkbox("Only normalize selected columns", value = False)
+    scaler = MinMaxScaler()
+
+    #normalize 
     df_normalized = df_clean_comb.loc[pd.to_numeric(df_clean_comb.iloc[:, 0], errors='coerce').between(min_wavelength, max_wavelength)]
     df_normalized.reset_index(drop=True, inplace=True) # reset indexes 
     if contains_units: 
         df_normalized.drop(index=[1], inplace=True) #drop unit row 
-    absorbance_values = df_normalized.iloc[:, skip_cols:].values.flatten().reshape(-1, 1) 
-    scaler = MinMaxScaler()
-    df_normalized.iloc[:, skip_cols:] = scaler.fit_transform(
-        df_normalized.iloc[:, skip_cols:].values.flatten().reshape(-1, 1) #flatten dataframe to scale on the same level
-        ).reshape(df_normalized.iloc[:, skip_cols:].shape) #reshape it back to the dataframe
+    if normalize_select: #only normalize selected column
+         normalize_cols = [col for col in selected_cols if col in df_normalized.columns and df_normalized.columns.get_loc(col) >= skip_cols]
+         df_normalized.loc[:, normalize_cols] = scaler.fit_transform(
+            df_normalized[normalize_cols].values.flatten().reshape(-1, 1)
+            ).reshape(df_normalized[normalize_cols].shape)
+    else: #normalize everything
+        df_normalized.iloc[:, skip_cols:] = scaler.fit_transform(
+                df_normalized.iloc[:, skip_cols:].values.flatten().reshape(-1, 1) #flatten dataframe to scale on the same level
+                ).reshape(df_normalized.iloc[:, skip_cols:].shape) #reshape it back to the dataframe
 
     #set x and y
     x = pd.to_numeric(df_normalized.iloc[:, 0])
     ys = df_normalized.iloc[:, skip_cols:]
 
     st.write(" <h3> Graph Visuals </h3> ", unsafe_allow_html = True)
-
-    #select trials to be displayed
-    selected_cols = [] 
-    with st.expander("Select Trials", expanded = False):
-        for col in ys.columns:
-            if st.checkbox(col, value=True):  
-                selected_cols.append(col)
                 
     include_legend = st.checkbox("Include Legend in Plot", value = False) #legend toggle
+    plot_cols = [col for col in selected_cols if col in ys.columns] #transfer selected columns to new dict for plotting
 
-    if selected_cols:
-
+    if plot_cols:
         #customize colors
         if "color_map" not in st.session_state: # set up color map if it doesn't already exist in the session
             st.session_state.color_map = {}
@@ -149,22 +157,22 @@ if input_files:
 
         if color_mode == "Default": #default colors - matplot default 
             default_colors = plt.rcParams['axes.prop_cycle'].by_key()['color']
-            for i, col in enumerate(selected_cols):
+            for i, col in enumerate(plot_cols):
                 color_map[col] = default_colors[i % len(default_colors)]
      
         if color_mode == "Colormap": #use a colormap from matplot
             st.page_link("https://matplotlib.org/stable/users/explain/colors/colormaps.html", label = "View Matplotlib Colormaps", use_container_width = True) #link to colormap options
             cmap_name = st.selectbox("Choose a colormap:", plt.colormaps(), index = 0)
             cmap = plt.get_cmap(cmap_name)
-            n = len(selected_cols)
-            for i, col in enumerate(selected_cols):
+            n = len(plot_cols)
+            for i, col in enumerate(plot_cols):
                 rgba = cmap(i / max(n - 1, 1))  # Normalize for color spacing
                 color_map[col] = to_hex(rgba) #convert to a hex code - for plotly to use
 
         
         if color_mode == "Custom Pick":
             with st.expander("Pick Colors for Each Column", expanded=True):
-                for col in selected_cols: # Use pre-computed color_map value as the default
+                for col in plot_cols: # Use pre-computed color_map value as the default
                     color = st.color_picker(
                                 f"Color for {col}",
                                 value=color_map.get(col, "#000000"), 
@@ -176,7 +184,7 @@ if input_files:
             st.write("Drop and drop select a region of peaks")
             fig = go.Figure()
            
-            for col in selected_cols: #plot each column 
+            for col in plot_cols: #plot each column 
                 y = ys[col]
                 fig.add_trace(go.Scatter(
                     x=x,
@@ -195,6 +203,7 @@ if input_files:
             fig.update_layout(
             xaxis_title='Wavelength (nm)',
             yaxis_title='Abs',
+            yaxis = dict(range = [0,1]),
             xaxis=dict(tickmode='linear', dtick=x_step, range=[x.min(), x.max()]),
             template='plotly_white',
             hovermode='closest',   #control what displays upon hover of the overall graph 
@@ -223,9 +232,10 @@ if input_files:
 
         else: #matplotlib static graph
             fig, ax = plt.subplots(figsize=(10, 6))
-            for col in selected_cols: #plot each column on the same axis 
+            for col in plot_cols: #plot each column on the same axis 
                 ax.plot(x, ys[col], label=str(col), color=color_map.get(col, "#000000"))
             ax.set_xlim(min_wavelength, max_wavelength)
+            ax.set_ylim(0,1)
             ax.set_xticks(np.arange(int(min_wavelength), int(max_wavelength)+1, x_step))
             ax.set_xlabel("Wavelength (nm)")
             ax.set_ylabel("Abs")
