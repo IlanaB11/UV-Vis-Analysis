@@ -61,7 +61,7 @@ input_files = st.file_uploader("Upload CSV file", type=["csv"], accept_multiple_
 
 # user inputs for information about the data
 st.write("<h3> File Controls </h3>", unsafe_allow_html = True)
-skip_cols = st.number_input("Number of Baseline Trials", value = 2) + 1 #number of columns skipped
+skip_cols = st.number_input("Number of Baseline Trials", value = 2) + 1#number of columns skipped
 st.write("Ex: if number of baseline trials is two there is a 100% baseline and a 0% baseline" )
 st.warning("Baseline Columns will not be included in normalization")
 contains_units = st.checkbox("Contains Unit Row", value = True) #if the row needs to be dropped
@@ -122,7 +122,7 @@ if input_files:
     for i in range(0, len(combined_clean)): #add the data from each file
         df_clean_comb = df_clean_comb.merge(combined_clean[i], on='Wavelength (nm)', how='outer')
 
-    df_clean_comb.sort_values(by='Wavelength (nm)', inplace=True) #sort values
+    df_clean_comb.sort_values(by='Wavelength (nm)', ascending=True, inplace=True) #sort values
 
     if len(input_files) > 1:
         st.warning(
@@ -142,7 +142,7 @@ if input_files:
     scaler = MinMaxScaler()
 
     #normalize 
-    df_normalized = df_clean_comb.loc[pd.to_numeric(df_clean_comb.iloc[:, 0], errors='coerce').between(min_wavelength, max_wavelength)]
+    df_normalized = df_clean_comb.loc[pd.to_numeric(df_clean_comb.iloc[:, 0], errors='coerce').between(min_wavelength, max_wavelength)] #make sure everything is a number
     df_normalized.reset_index(drop=True, inplace=True) # reset indexes 
     if contains_units: 
         df_normalized.drop(index=[1], inplace=True) #drop unit row 
@@ -211,21 +211,22 @@ if input_files:
                     x=x,
                     y=y,
                     mode='markers+lines',
-                    line=dict(color=color_map.get(col, "#000000")), 
-                    name=str(col), 
+                    line=dict(color=color_map.get(col, "#000000"), width = 0.75), 
+                    name=str(col),
                     text=[col]*len(x), 
                     hovertemplate=
                         'Trial: %{text}<br>' +  #control information displayed on hover for each line
                         'Wavelength: %{x} nm<br>' +
                         'Absorbance: %{y}<extra></extra>',
-                    marker = dict(size = 2) #small size so the markers can't be seen but they can be selected 
+                    marker = dict(size = 0, opacity = 0),  # hide markers but they can still be selected 
+                    connectgaps=True,  # connect over NaNs caused by merge
             ))
                 
             fig.update_layout(
             xaxis_title='Wavelength (nm)',
             yaxis_title='Abs',
-            yaxis = dict(range = [0,1]),
-            xaxis=dict(tickmode='linear', dtick=x_step, range=[x.min(), x.max()]),
+            yaxis = dict(range = [0,1.05]),
+            xaxis=dict(tickmode='linear', dtick=x_step, range=[x.min(), x.max() + 1]),
             template='plotly_white',
             hovermode='closest',   #control what displays upon hover of the overall graph 
             )
@@ -288,12 +289,15 @@ if input_files:
         else:
             fig, ax = plt.subplots(figsize=(10, 6))
             for col in plot_cols: #plot each column on the same axis 
-                ax.plot(x, ys[col], label=str(col), color=color_map.get(col, "#000000"))
+                y = ys[col].astype(float).interpolate(method='linear', limit_direction='both') #interpolate to ignore NaN values from merge
+                ax.plot(x, y, label=str(col), color=color_map.get(col, "#000000"), lw=0.75 )
             ax.set_xlim(min_wavelength, max_wavelength)
             ax.set_ylim(0,1)
             ax.set_xticks(np.arange(int(min_wavelength), int(max_wavelength)+1, x_step))
             ax.set_xlabel("Wavelength (nm)")
             ax.set_ylabel("Abs")
+            ax.spines['top']. set_visible(False)
+            ax.spines['right']. set_visible(False)
             if include_legend: #legend toggle
                 ax.legend(loc='upper right', fontsize='small')
                 
@@ -322,7 +326,7 @@ st.markdown( #add a link to the github repo (and the github logo because I wante
         </a>.
     </small>
     <br>
-    <sub> This site was made with help from ChatGPT and Claude.AI </sub>
+    <sub> This site was made with help from ChatGPT and Claude.ai </sub>
     """,
     unsafe_allow_html=True
 )
