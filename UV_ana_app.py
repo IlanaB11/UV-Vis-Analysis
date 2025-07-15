@@ -70,7 +70,7 @@ repeats_wavelength = st.checkbox("Wavelength Column Repeats For Each Trial", val
 st.markdown("---")
 st.write(" <h3> Graph Features </h3> ", unsafe_allow_html = True)
 min_wavelength = st.number_input("Minimum wavelength (nm)", value=300) #wavelength range
-max_wavelength = st.number_input("Maximum wavelength (nm)", value=1000)
+max_wavelength = st.number_input("Maximum wavelength (nm)", value=1000) + 1
 x_step = st.number_input("X step (nm)", value = 100, min_value = 1) #x ticks
 interactive = st.toggle("Interactive Plot", value = True) #toggle between matplot and plotly graphs
 
@@ -122,6 +122,7 @@ if input_files:
     for i in range(0, len(combined_clean)): #add the data from each file
         df_clean_comb = df_clean_comb.merge(combined_clean[i], on='Wavelength (nm)', how='outer')
 
+    df_clean_comb["Wavelength (nm)"] = pd.to_numeric(df_clean_comb["Wavelength (nm)"], errors='coerce') #make sure all wavelengths are numeric
     df_clean_comb.sort_values(by='Wavelength (nm)', ascending=True, inplace=True) #sort values
 
     if len(input_files) > 1:
@@ -142,7 +143,7 @@ if input_files:
     scaler = MinMaxScaler()
 
     #normalize 
-    df_normalized = df_clean_comb.loc[pd.to_numeric(df_clean_comb.iloc[:, 0], errors='coerce').between(min_wavelength, max_wavelength)] #make sure everything is a number
+    df_normalized = df_clean_comb.loc[pd.to_numeric(df_clean_comb.iloc[:, 0], errors='coerce').between(min_wavelength, max_wavelength, inclusive="both")] #make sure everything is a number
     df_normalized.reset_index(drop=True, inplace=True) # reset indexes 
     if contains_units: 
         df_normalized.drop(index=[1], inplace=True) #drop unit row 
