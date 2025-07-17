@@ -91,7 +91,6 @@ if input_files:
         df_clean = df_clean.astype(object)  # convert all columns to object dtype
 
         if not use_raw_files:
-            df = pd.read_csv(input_file, header = None)
 
             #clean data
             if repeats_wavelength: 
