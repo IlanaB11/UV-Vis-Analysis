@@ -60,20 +60,22 @@ st.title("UV Vis Spectra Cleaner & Visualizer")
 input_files = st.file_uploader("Upload CSV file", type=["csv"], accept_multiple_files = True)
 
 # user inputs for information about the data
-st.write("<h3> File Controls </h3>", unsafe_allow_html = True)
-skip_cols = st.number_input("Number of Baseline Trials", value = 2) + 1#number of columns skipped
-st.write("Ex: if number of baseline trials is two there is a 100% baseline and a 0% baseline" )
-st.warning("Baseline Columns will not be included in normalization")
-contains_units = st.checkbox("Contains Unit Row", value = True) #if the row needs to be dropped
-repeats_wavelength = st.checkbox("Wavelength Column Repeats For Each Trial", value = True)
+with st.expander("Data Handling & Upload Options", expanded=True):
+    use_raw_files = st.checkbox("Upload pre-cleaned file (Skip Cleaning Step)", value=False)
+    #st.write("<h3> File Controls </h3>", unsafe_allow_html = True)
+    skip_cols = st.number_input("Number of Baseline Trials", value = 2) + 1#number of columns skipped
+    st.write("Ex: if number of baseline trials is two there is a 100% baseline and a 0% baseline" )
+    st.warning("Baseline Columns will not be included in normalization")
+    contains_units = st.checkbox("Contains Unit Row", value = True) #if the row needs to be dropped
+    repeats_wavelength = st.checkbox("Wavelength Column Repeats For Each Trial", value = True)
 
-st.markdown("---")
-st.write(" <h3> Graph Features </h3> ", unsafe_allow_html = True)
-min_wavelength = st.number_input("Minimum wavelength (nm)", value=300) #wavelength range
-max_wavelength = st.number_input("Maximum wavelength (nm)", value=1000) + 1
-x_step = st.number_input("X step (nm)", value = 100, min_value = 1) #x ticks
-interactive = st.toggle("Interactive Plot", value = True) #toggle between matplot and plotly graphs
-
+st.divider()
+with st.expander("Graphing Options", expanded=True):
+    #st.write(" <h3> Graph Features </h3> ", unsafe_allow_html = True)
+    min_wavelength = st.number_input("Minimum wavelength (nm)", value=300) #wavelength range
+    max_wavelength = st.number_input("Maximum wavelength (nm)", value=1000) + 1
+    x_step = st.number_input("X step (nm)", value = 100, min_value = 1) #x ticks
+    interactive = st.toggle("Interactive Plot", value = True) #toggle between matplot and plotly graphs
 
 if input_files:
     combined_clean = []
@@ -84,37 +86,25 @@ if input_files:
         #cleaned_filename = f"{base_name}_cleaned.csv" #autocreate cleaned and normilized file names
         #normalized_filename = f"{base_name}_normalized.csv"
 
-        #read file
-        df = pd.read_csv(input_file, header = None)
-
-        #clean data
+        df = pd.read_csv(input_file, header = None) #read file
         df_clean = df.copy()
-
         df_clean = df_clean.astype(object)  # convert all columns to object dtype
-        if repeats_wavelength: 
-            df_clean.iloc[0] = df_clean.iloc[0].ffill() #forward fill the column names
-        df_clean.dropna(subset=[df_clean.columns[-2]], inplace = True) #drop rows with NaN in the last column - removed all the descriptive rows
-        df_clean.dropna(axis=1, inplace = True) # remove any columns that have null values - incomplete data
-        df_clean.columns = range(df_clean.shape[1]) #reset column names after dropping columns
-        if repeats_wavelength: 
-            df_clean.drop(columns= df_clean.columns[(df_clean.columns != 0) & (df_clean.columns % 2 == 0)], inplace = True) #drop even numbered columns (repeats of wavelength)
-        df_clean.iat[0, 0] = 'Wavelength (nm)' #set the first cell to be the wavelength column name
+
+        if not use_raw_files:
+            df = pd.read_csv(input_file, header = None)
+
+            #clean data
+            if repeats_wavelength: 
+                df_clean.iloc[0] = df_clean.iloc[0].ffill() #forward fill the column names
+            df_clean.dropna(subset=[df_clean.columns[-2]], inplace = True) #drop rows with NaN in the last column - removed all the descriptive rows
+            df_clean.dropna(axis=1, inplace = True) # remove any columns that have null values - incomplete data
+            df_clean.columns = range(df_clean.shape[1]) #reset column names after dropping columns
+            if repeats_wavelength: 
+                df_clean.drop(columns= df_clean.columns[(df_clean.columns != 0) & (df_clean.columns % 2 == 0)], inplace = True) #drop even numbered columns (repeats of wavelength)
+            df_clean.iat[0, 0] = 'Wavelength (nm)' #set the first cell to be the wavelength column name
+
         df_clean.columns = df_clean.iloc[0] # set the first row as the column names
         df_clean.drop(index=[0], inplace=True) # drop first duplicate row
-
-        #Throw an error if files have different wavelength ranges
-        #wavelengths = pd.to_numeric(df_clean.iloc[:, 0], errors='coerce')
-        #wavelengths = wavelengths.dropna() #remove nulls just in case
-        #file_range = (wavelengths.min(), wavelengths.max()) #wavelength range
-
-        #if 'wavelength_range' not in st.session_state: #store as session variable
-            #st.session_state.wavelength_range = file_range
-        #else:
-            #if file_range != st.session_state.wavelength_range:
-                #st.error(f"File '{filename}' has wavelength range {file_range[0]}–{file_range[1]} nm, which does not match "
-                       # f"the first file's range of {st.session_state.wavelength_range[0]}–{st.session_state.wavelength_range[1]} nm.")
-                #st.stop()
-        
         combined_clean.append(pd.concat([df_clean.iloc[:, 0], df_clean.iloc[:, skip_cols:]], axis=1)) #wavelength and non_baseline columns
 
     #merge on wavelength column
@@ -161,7 +151,7 @@ if input_files:
     x = pd.to_numeric(df_normalized.iloc[:, 0])
     ys = df_normalized.iloc[:, skip_cols:]
 
-    st.markdown("---")
+    st.divider()
     st.write(" <h3> Graph Visuals </h3> ", unsafe_allow_html = True)
                 
     include_legend = st.checkbox("Include Legend in Plot", value = False) #legend toggle
@@ -200,7 +190,7 @@ if input_files:
                                 )
                     color_map[col] = color  # overwrite with user-selected color
 
-        st.markdown("---")
+        st.divider()
 
         if interactive: #plotly interactive graph 
             st.write("Drop and drop select a region of peaks")
@@ -280,8 +270,7 @@ if input_files:
                             if not ((st.session_state.saved_peaks["Trial"] == row["Trial"]) & (st.session_state.saved_peaks["Max Wavelength (nm)"] == row["Max Wavelength (nm)"])).any(): #remove repeats
                                 st.session_state.saved_peaks = pd.concat([st.session_state.saved_peaks, pd.DataFrame([row.drop("Save Peak")])], ignore_index=True) # add to saved dataframe without button row
 
-                    #st.warning("Save Peaks is under construction and currently does not work") #add FIXME warning
-                st.markdown("---")
+                st.divider()
                 st.subheader("Saved Peaks")
                 st.dataframe(st.session_state.saved_peaks,  column_config = {"Peak": st.column_config.ImageColumn()})
 
@@ -307,13 +296,13 @@ if input_files:
         st.warning("Please select at least one column to plot.")
 
     #downloads
-    st.markdown("---")
+    st.divider()
     st.write(" <h3> Files </h3> ", unsafe_allow_html = True)
     st.write("If something with the graphs looks wrong please look at the cleaned and normalized files to make sure the data is being proccessed correctly")
-    filename = st.text_input("What would you like to name your files?", placeholder = "File Name") #set filename
+    filename = st.text_input("What would you like to name your files?", value = "File Name") #set filename
 
-    st.download_button("Download Cleaned CSV", df_clean_comb.to_csv(index=False).encode(), file_name= filename + "_cleaned") #download cleaned file 
-    st.download_button("Download Normalized CSV", df_normalized.to_csv(index=False).encode(), file_name= filename + "_normalized") #download normalized file
+    st.download_button("Download Cleaned CSV", df_clean_comb.to_csv(index=False).encode(), file_name= filename + ".csv") #download cleaned file 
+    st.download_button("Download Normalized CSV", df_normalized.to_csv(index=False).encode(), file_name= filename + ".csv") #download normalized file
 
 st.markdown( #add a link to the github repo (and the github logo because I wanted to be fancy)
     """
