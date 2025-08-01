@@ -5,9 +5,11 @@ import matplotlib.pyplot as plt
 import plotly.graph_objects as go
 import io #for inline graphing
 import base64 #for inline graphing
+import matplotlib.font_manager as fm #fonts
 from sklearn.preprocessing import MinMaxScaler #for normalization 
 from matplotlib.colors import to_hex #for color customization 
 from collections import defaultdict #to prevent key error in find_max function
+
 
 #functions
 def find_max(selection, fig): 
@@ -60,6 +62,7 @@ st.title("UV Vis Spectra Cleaner & Visualizer")
 input_files = st.file_uploader("Upload CSV file", type=["csv"], accept_multiple_files = True)
 
 # user inputs for information about the data
+st.divider()
 with st.expander("Data Handling & Upload Options", expanded=True):
     use_raw_files = st.checkbox("Upload pre-cleaned file (Skip Cleaning Step)", value=False)
     #st.write("<h3> File Controls </h3>", unsafe_allow_html = True)
@@ -75,7 +78,12 @@ with st.expander("Graphing Options", expanded=True):
     min_wavelength = st.number_input("Minimum wavelength (nm)", value=300) #wavelength range
     max_wavelength = st.number_input("Maximum wavelength (nm)", value=1000) + 1
     x_step = st.number_input("X step (nm)", value = 100, min_value = 1) #x ticks
+    line_weight = st.slider("Lineweight", value = 0.75, min_value = 0.25, max_value = 5.0, step = 0.25) #line thickness
+    available_fonts = sorted(set(f.name for f in fm.fontManager.ttflist)) #load fonts into a list
+    selected_font = st.selectbox("Choose plot font (Non interactive only)", available_fonts, index=available_fonts.index("DejaVu Sans") if "DejaVu Sans" in available_fonts else 0) #allow font selection
+    include_legend = st.checkbox("Include Legend in Plot", value = False) #legend toggle
     interactive = st.toggle("Interactive Plot", value = True) #toggle between matplot and plotly graphs
+st.divider() 
 
 if input_files:
     combined_clean = []
@@ -150,10 +158,8 @@ if input_files:
     x = pd.to_numeric(df_normalized.iloc[:, 0])
     ys = df_normalized.iloc[:, skip_cols:]
 
-    st.divider()
-    st.write(" <h3> Graph Visuals </h3> ", unsafe_allow_html = True)
-                
-    include_legend = st.checkbox("Include Legend in Plot", value = False) #legend toggle
+    st.divider()            
+   
     plot_cols = [col for col in selected_cols if col in ys.columns] #transfer selected columns to new dict for plotting
 
     if plot_cols:
@@ -283,8 +289,8 @@ if input_files:
             ax.set_xlim(min_wavelength, max_wavelength)
             ax.set_ylim(0,1)
             ax.set_xticks(np.arange(int(min_wavelength), int(max_wavelength)+1, x_step))
-            ax.set_xlabel("Wavelength (nm)")
-            ax.set_ylabel("Abs")
+            ax.set_xlabel("Wavelength (nm)", fontname = selected_font)
+            ax.set_ylabel("Abs", fontname = selected_font)
             ax.spines['top']. set_visible(False)
             ax.spines['right']. set_visible(False)
             if include_legend: #legend toggle
