@@ -285,12 +285,12 @@ if input_files:
             fig, ax = plt.subplots(figsize=(10, 6))
             for col in plot_cols: #plot each column on the same axis 
                 y = ys[col].astype(float).interpolate(method='linear', limit_direction='both') #interpolate to ignore NaN values from merge
-                ax.plot(x, y, label=str(col), color=color_map.get(col, "#000000"), lw=0.75 )
+                ax.plot(x, y, label=str(col), color=color_map.get(col, "#000000"), lw=line_weight )
             ax.set_xlim(min_wavelength, max_wavelength)
             ax.set_ylim(0,1)
             ax.set_xticks(np.arange(int(min_wavelength), int(max_wavelength)+1, x_step))
-            ax.set_xlabel("Wavelength (nm)", fontname = selected_font)
-            ax.set_ylabel("Abs", fontname = selected_font)
+            ax.set_xlabel("Wavelength (nm)", fontname = selected_font, size = 'xx-large')
+            ax.set_ylabel("Abs", fontname = selected_font, size = 'xx-large')
             ax.spines['top']. set_visible(False)
             ax.spines['right']. set_visible(False)
             if include_legend: #legend toggle
