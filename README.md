@@ -65,7 +65,7 @@ Files are merged on the Wavelength column. This can create nulls so use carefull
 The baseline is taken from the file that was uploaded last. 
 
 ## About Project
-I made this as a tool to help me with my UV Vis Analysis while doing research for a 6 week period over the summer. Any consistent errors my data or variation with how the UV-Vis Spectometer I used (INSERT BRAND AND MODEL) worked compared to others may affect the effectivness of this processing. It by no means works perfectly (and it is not really meant to since it is just a tool I made for myself) but please use it as you see fit. <br> <br> 
+I made this as a tool to help me with my UV Vis Analysis while doing research for a 6 week period over the summer. It by no means works perfectly (and it is not really meant to since it is just a tool I made for myself). <br> <br> 
 
 Made to process data collected from Agilent Cary 60 UV-Vis by the program Cary WinUV Scan Application version 5.1.3.1042
 
